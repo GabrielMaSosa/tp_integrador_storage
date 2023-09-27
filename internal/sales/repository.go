@@ -20,7 +20,7 @@ func NewRepository(db *sql.DB) Repository {
 }
 
 func (r *repository) Create(sales *domain.Sales) (int64, error) {
-	query := `INSERT INTO sales (product_id, invoices_id, quantity) VALUES (?, ?, ?)`
+	query := `INSERT INTO sales (product_id, invoice_id, quantity) VALUES (?, ?, ?)`
 	row, err := r.db.Exec(query, &sales.ProductId, &sales.InvoicesId, &sales.Quantity)
 	if err != nil {
 		return 0, err
