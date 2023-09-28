@@ -10,8 +10,8 @@ import (
 )
 
 type ConditionTotal struct {
-	Condition bool
-	Total     float64
+	Condition bool    `json:"condition"`
+	Total     float64 `json:"total"`
 }
 type CustomerActive struct {
 	LastName  string  `json:"last_name"`
