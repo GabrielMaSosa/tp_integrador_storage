@@ -109,15 +109,18 @@ func (r *repository) GetTotalCustomers() (ret []ConditionTotal, err error) {
 }
 
 /*
-
+SELECT c.first_name as first_name ,c.last_name as last_name, SUM(i.total) as amount FROM customers c
+INNER JOIN invoices i ON p.id = i.customer_id
+GROUP BY p.id ORDER BY SUM(i.total) DESC
 ;
 
 */
 
 func (r *repository) GetTopCustomerActive() (ret []CustomerActive, err error) {
 	stmt, err := r.db.Prepare(
-		`SELECT c.first_name as first_name, c.last_name as last_name, i.total as amount FROM customers c INNER JOIN invoices i ON i.customer_id = c.id
-		WHERE c.condition=1 ORDER BY amount DESC LIMIT 5;`)
+		`SELECT c.first_name as first_name ,c.last_name as last_name, SUM(i.total) as amount FROM customers c 
+		INNER JOIN invoices i ON c.id = i.customer_id
+		GROUP BY c.id ORDER BY SUM(i.total) DESC LIMIT 5;`)
 	if err != nil {
 		log.Println("error get total customers", err.Error())
 	}
