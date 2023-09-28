@@ -2,13 +2,28 @@ package customers
 
 import (
 	"database/sql"
+	"errors"
+	"log"
 
 	"github.com/bootcamp-go/desafio-cierre-db.git/internal/domain"
+	"github.com/go-sql-driver/mysql"
 )
+
+type ConditionTotal struct {
+	Condition bool
+	Total     float64
+}
+type CustomerActive struct {
+	LastName  string  `json:"last_name"`
+	FirstName string  `json:"first_name"`
+	Amount    float64 `json:"amount"`
+}
 
 type Repository interface {
 	Create(customers *domain.Customers) (int64, error)
 	ReadAll() ([]*domain.Customers, error)
+	GetTotalCustomers() (ret []ConditionTotal, err error)
+	GetTopCustomerActive() (ret []CustomerActive, err error)
 }
 
 type repository struct {
@@ -49,4 +64,89 @@ func (r *repository) ReadAll() ([]*domain.Customers, error) {
 		customers = append(customers, &customer)
 	}
 	return customers, nil
+}
+
+/*
+SELECT c.condition as condicion , TRUNCATE(SUM(i.total),2) as total FROM customers c INNER JOIN invoices i ON c.id = i.customer_id
+GROUP BY condicion;
+
+*/
+
+func (r *repository) GetTotalCustomers() (ret []ConditionTotal, err error) {
+	stmt, err := r.db.Prepare(
+		`SELECT c.condition as condicion , TRUNCATE(SUM(i.total),2) as total FROM customers c INNER JOIN invoices i ON c.id = i.customer_id
+		GROUP BY condicion;`)
+	if err != nil {
+		log.Println("error get total customers", err.Error())
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Query()
+	drivererr, ok := err.(*mysql.MySQLError)
+	if ok {
+		//atrapamos los errores del driver
+		log.Println("error get total customers query: ", drivererr.Number, drivererr.Message, drivererr.Error())
+		err = errors.New("Internal")
+		return
+	}
+	if err != nil {
+		log.Println("error get total customers query", err.Error())
+		err = errors.New("Internal")
+		return
+	}
+	for res.Next() {
+		var p ConditionTotal
+		if res.Scan(&p.Condition, &p.Total); err != nil {
+			log.Println("error get total customers scan", err.Error())
+			err = errors.New("Internal")
+			return
+		}
+		ret = append(ret, p)
+
+	}
+
+	return
+}
+
+/*
+
+;
+
+*/
+
+func (r *repository) GetTopCustomerActive() (ret []CustomerActive, err error) {
+	stmt, err := r.db.Prepare(
+		`SELECT c.first_name as first_name, c.last_name as last_name, i.total as amount FROM customers c INNER JOIN invoices i ON i.customer_id = c.id
+		WHERE c.condition=1 ORDER BY amount DESC LIMIT 5;`)
+	if err != nil {
+		log.Println("error get total customers", err.Error())
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Query()
+	drivererr, ok := err.(*mysql.MySQLError)
+	if ok {
+		//atrapamos los errores del driver
+		log.Println("error get total GetTopCustomerActive query: ", drivererr.Number, drivererr.Message, drivererr.Error())
+		err = errors.New("Internal")
+		return
+	}
+	if err != nil {
+		log.Println("error get total GetTopCustomerActive query", err.Error())
+		err = errors.New("Internal")
+		return
+	}
+	for res.Next() {
+		var p CustomerActive
+		if res.Scan(&p.FirstName, &p.LastName, &p.Amount); err != nil {
+			log.Println("error get total customers scan", err.Error())
+			err = errors.New("Internal")
+			return
+		}
+		ret = append(ret, p)
+
+	}
+
+	return
+
 }

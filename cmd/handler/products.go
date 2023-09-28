@@ -72,3 +72,23 @@ func (p *Products) GetRecovery() gin.HandlerFunc {
 	}
 
 }
+
+func (p *Products) GetTotalTop() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		pass := ctx.GetHeader("password")
+		if pass != "123456" {
+			ctx.String(http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		ret, err := p.s.GetTopProducts()
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"data": ret})
+	}
+
+}

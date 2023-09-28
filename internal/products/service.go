@@ -1,10 +1,15 @@
 package products
 
-import "github.com/bootcamp-go/desafio-cierre-db.git/internal/domain"
+import (
+	"log"
+
+	"github.com/bootcamp-go/desafio-cierre-db.git/internal/domain"
+)
 
 type Service interface {
 	Create(product *domain.Product) error
 	ReadAll() ([]*domain.Product, error)
+	GetTopProducts() (ret []TopProduct, err error)
 }
 
 type service struct {
@@ -25,4 +30,13 @@ func (s *service) Create(product *domain.Product) error {
 
 func (s *service) ReadAll() ([]*domain.Product, error) {
 	return s.r.ReadAll()
+}
+
+func (s *service) GetTopProducts() (ret []TopProduct, err error) {
+	ret, err = s.r.GetTop()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	return
 }

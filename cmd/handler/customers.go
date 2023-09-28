@@ -72,3 +72,43 @@ func (c *Customers) GetRecovery() gin.HandlerFunc {
 	}
 
 }
+
+func (c *Customers) GetTotal() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		pass := ctx.GetHeader("password")
+		if pass != "123456" {
+			ctx.String(http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		ret, err := c.s.TotalCustomers()
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"data": ret})
+	}
+
+}
+
+func (c *Customers) GetActiveTotal() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		pass := ctx.GetHeader("password")
+		if pass != "123456" {
+			ctx.String(http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		ret, err := c.s.TopCustomerActive()
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		ctx.JSON(200, gin.H{"data": ret})
+	}
+
+}
